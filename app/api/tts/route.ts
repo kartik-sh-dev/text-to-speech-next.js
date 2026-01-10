@@ -30,12 +30,16 @@ export async function POST(req: Request) {
       },
     });
 
-    // Convert Buffer to Uint8Array (which is accepted by NextResponse)
-    const audioBuffer = response.audioContent instanceof Buffer 
-      ? new Uint8Array(response.audioContent)
-      : response.audioContent;
+    if (!response.audioContent) {
+      return NextResponse.json({ error: "No audio generated" }, { status: 500 });
+    }
 
-    return new NextResponse(audioBuffer, {
+    // Convert to a proper Uint8Array that NextResponse accepts
+    const audioArray = new Uint8Array(
+      response.audioContent as ArrayBuffer | Buffer
+    );
+
+    return new NextResponse(audioArray as BodyInit, {
       headers: {
         "Content-Type": "audio/mpeg",
         "Content-Disposition": "inline; filename=speech.mp3",
