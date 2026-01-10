@@ -1,7 +1,21 @@
 import { NextResponse } from "next/server";
 import textToSpeech from "@google-cloud/text-to-speech";
 
-const client = new textToSpeech.TextToSpeechClient();
+// Initialize client with credentials
+const getClient = () => {
+  if (process.env.GOOGLE_CLOUD_CREDENTIALS) {
+    // Production/Vercel: use credentials from environment variable
+    const credentials = JSON.parse(process.env.GOOGLE_CLOUD_CREDENTIALS);
+    return new textToSpeech.TextToSpeechClient({
+      credentials,
+    });
+  }
+  
+  // Local: use credentials from file (default behavior)
+  return new textToSpeech.TextToSpeechClient();
+};
+
+const client = getClient();
 
 export async function POST(req: Request) {
   try {
@@ -34,7 +48,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No audio generated" }, { status: 500 });
     }
 
-    // Convert to a proper Uint8Array that NextResponse accepts
     const audioArray = new Uint8Array(
       response.audioContent as ArrayBuffer | Buffer
     );
