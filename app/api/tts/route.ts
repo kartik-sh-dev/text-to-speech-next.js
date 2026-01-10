@@ -30,10 +30,15 @@ export async function POST(req: Request) {
       },
     });
 
-    return new NextResponse(response.audioContent as Buffer, {
+    // Convert Buffer to Uint8Array (which is accepted by NextResponse)
+    const audioBuffer = response.audioContent instanceof Buffer 
+      ? new Uint8Array(response.audioContent)
+      : response.audioContent;
+
+    return new NextResponse(audioBuffer, {
       headers: {
         "Content-Type": "audio/mpeg",
-        "Content-Disposition": "attachment; filename=speech.mp3",
+        "Content-Disposition": "inline; filename=speech.mp3",
       },
     });
   } catch (err) {
