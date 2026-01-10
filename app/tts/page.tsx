@@ -11,9 +11,9 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
+  User,
 } from "lucide-react";
 
-// Voice options by language
 const voicesByLanguage = {
   "en-US": [
     { value: "en-US-Neural2-A", label: "US Female (Neural A)" },
@@ -26,28 +26,24 @@ const voicesByLanguage = {
     { value: "en-US-Neural2-J", label: "US Male (Neural J)" },
   ],
   "en-IN": [
-    { value: "en-IN-Neural2-A", label: "Indian Female (Neural A)" },
-    { value: "en-IN-Neural2-B", label: "Indian Male (Neural B)" },
-    { value: "en-IN-Neural2-C", label: "Indian Male (Neural C)" },
-    { value: "en-IN-Neural2-D", label: "Indian Female (Neural D)" },
+    { value: "en-IN-Neural2-A", label: "Indian Female" },
+    { value: "en-IN-Neural2-B", label: "Indian Male" },
+    { value: "en-IN-Neural2-C", label: "Indian Male 2" },
+    { value: "en-IN-Neural2-D", label: "Indian Female 2" },
   ],
   "hi-IN": [
-    { value: "hi-IN-Neural2-A", label: "Hindi Female (Neural A)" },
-    { value: "hi-IN-Neural2-B", label: "Hindi Male (Neural B)" },
-    { value: "hi-IN-Neural2-C", label: "Hindi Male (Neural C)" },
-    { value: "hi-IN-Neural2-D", label: "Hindi Female (Neural D)" },
+    { value: "hi-IN-Neural2-A", label: "Hindi Female" },
+    { value: "hi-IN-Neural2-B", label: "Hindi Male" },
+    { value: "hi-IN-Neural2-C", label: "Hindi Male 2" },
+    { value: "hi-IN-Neural2-D", label: "Hindi Female 2" },
   ],
   "es-ES": [
-    { value: "es-ES-Neural2-A", label: "Spanish Female (Neural A)" },
-    { value: "es-ES-Neural2-B", label: "Spanish Male (Neural B)" },
-    { value: "es-ES-Neural2-C", label: "Spanish Female (Neural C)" },
-    { value: "es-ES-Neural2-D", label: "Spanish Female (Neural D)" },
+    { value: "es-ES-Neural2-A", label: "Spanish Female" },
+    { value: "es-ES-Neural2-B", label: "Spanish Male" },
   ],
   "fr-FR": [
-    { value: "fr-FR-Neural2-A", label: "French Female (Neural A)" },
-    { value: "fr-FR-Neural2-B", label: "French Male (Neural B)" },
-    { value: "fr-FR-Neural2-C", label: "French Female (Neural C)" },
-    { value: "fr-FR-Neural2-D", label: "French Male (Neural D)" },
+    { value: "fr-FR-Neural2-A", label: "French Female" },
+    { value: "fr-FR-Neural2-B", label: "French Male" },
   ],
 };
 
@@ -75,7 +71,6 @@ export default function TTSPage() {
     setCharCount(text.length);
   }, [text]);
 
-  // Update voice when language changes
   useEffect(() => {
     const voices = voicesByLanguage[language as keyof typeof voicesByLanguage];
     if (voices && voices.length > 0) {
@@ -97,13 +92,7 @@ export default function TTSPage() {
       const res = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text,
-          language,
-          voice,
-          speed,
-          pitch,
-        }),
+        body: JSON.stringify({ text, language, voice, speed, pitch }),
       });
 
       if (!res.ok) {
@@ -113,13 +102,12 @@ export default function TTSPage() {
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-
       const a = document.createElement("a");
       a.href = url;
-      a.download = `speech-${Date.now()}.mp3`;
+      a.download = `voiceai-${Date.now()}.mp3`;
       a.click();
-
       URL.revokeObjectURL(url);
+      
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
@@ -131,8 +119,8 @@ export default function TTSPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-lg text-gray-600">Checking authentication...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-lg text-white">Loading...</div>
       </div>
     );
   }
@@ -140,33 +128,27 @@ export default function TTSPage() {
   const currentVoices = voicesByLanguage[language as keyof typeof voicesByLanguage] || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="bg-opacity-5">
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-indigo-600 p-2 rounded-lg">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-2 rounded-xl">
               <Volume2 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">
-                Text-to-Speech Studio
-              </h1>
-              <p className="text-sm text-gray-500">
-                Powered by Google Cloud AI
-              </p>
+              <h1 className="text-xl font-bold text-white">Voice Studio</h1>
+              <p className="text-sm text-gray-400">AI Text-to-Speech</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium text-gray-900">
-                {session?.user?.email}
-              </p>
-              <p className="text-xs text-gray-500">Logged in</p>
+            <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-white bg-opacity-5 rounded-lg border border-white border-opacity-10">
+              <User className="w-4 h-4 text-purple-400" />
+              <p className="text-sm font-medium">{session?.user?.email}</p>
             </div>
             <button
-              onClick={() => signOut({ callbackUrl: "/login" })}
-              className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors border border-red-200"
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500 bg-opacity-20 hover:bg-opacity-30 text-red-300 rounded-lg transition-all border border-red-500 border-opacity-30"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Logout</span>
@@ -176,60 +158,55 @@ export default function TTSPage() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="container mx-auto px-6 py-8 max-w-7xl">
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Text Input Section */}
+          {/* Text Input */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Your Text
-                </h2>
-                <span className="text-sm text-gray-500">
-                  {charCount} characters
+            <div className="bg-opacity-5 rounded-3xl shadow-2xl p-8 border border-white border-opacity-10">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white">Your Text</h2>
+                <span className="text-sm text-gray-800 bg-white bg-opacity-10 px-3 py-1 rounded-lg">
+                  {charCount} / 5000
                 </span>
               </div>
+              
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none transition"
-                placeholder="Type or paste your text here... 
+                maxLength={5000}
+                className="w-full h-80 p-6 bg-white bg-opacity-5 border border-white border-opacity-20 rounded-2xl placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none text-lg"
+                placeholder="Type or paste your text here...
 
-Try something like:
-'Hello! This is a demonstration of AI-powered text-to-speech technology. It can convert any text into natural-sounding speech in multiple languages and voices.'"
+Example: Welcome to VoiceAI! Transform your text into natural-sounding speech with advanced AI technology."
               />
 
-              {/* Status Messages */}
               {error && (
-                <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-700">{error}</p>
+                <div className="mt-4 bg-red-500 bg-opacity-20 border border-red-500 border-opacity-50 rounded-xl p-4 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-300 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-200">{error}</p>
                 </div>
               )}
 
               {success && (
-                <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-3 flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-green-700">
-                    Speech generated successfully! Check your downloads.
-                  </p>
+                <div className="mt-4 bg-green-500 bg-opacity-20 border border-green-500 border-opacity-50 rounded-xl p-4 flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-300 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-green-200">Speech generated successfully! Check your downloads.</p>
                 </div>
               )}
 
-              {/* Generate Button */}
               <button
                 onClick={downloadSpeech}
                 disabled={loading || !text.trim()}
-                className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white font-semibold py-4 rounded-lg transition-colors shadow-lg hover:shadow-xl disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="mt-6 w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-5 rounded-xl transition-all shadow-lg disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-6 h-6 animate-spin" />
                     Generating Speech...
                   </>
                 ) : (
                   <>
-                    <Download className="w-5 h-5" />
+                    <Download className="w-6 h-6" />
                     Generate & Download MP3
                   </>
                 )}
@@ -239,58 +216,50 @@ Try something like:
 
           {/* Settings Panel */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-8">
-              <div className="flex items-center gap-2 mb-6">
-                <Settings className="w-5 h-5 text-indigo-600" />
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Voice Settings
-                </h2>
+            <div className="bg-opacity-5 rounded-3xl shadow-2xl p-8 border border-white border-opacity-10 sticky top-8">
+              <div className="flex items-center gap-3 mb-8">
+                <Settings className="w-5 h-5 text-purple-400" />
+                <h2 className="text-xl font-bold text-white">Settings</h2>
               </div>
 
               <div className="space-y-6">
-                {/* Language Selection */}
+                {/* Language */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Language
-                  </label>
+                  <label className="block text-sm font-semibold text-white mb-3">Language</label>
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 bg-white bg-opacity-10 border border-white border-opacity-20 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
                   >
-                    <option value="en-US">English (US)</option>
-                    <option value="en-IN">English (India)</option>
-                    <option value="hi-IN">Hindi</option>
-                    <option value="es-ES">Spanish</option>
-                    <option value="fr-FR">French</option>
+                    <option value="en-US" className="bg-slate-800">English (US)</option>
+                    <option value="en-IN" className="bg-slate-800">English (India)</option>
+                    <option value="hi-IN" className="bg-slate-800">Hindi</option>
+                    <option value="es-ES" className="bg-slate-800">Spanish</option>
+                    <option value="fr-FR" className="bg-slate-800">French</option>
                   </select>
                 </div>
 
-                {/* Voice Selection */}
+                {/* Voice */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Voice
-                  </label>
+                  <label className="block text-sm font-semibold text-white mb-3">Voice</label>
                   <select
                     value={voice}
                     onChange={(e) => setVoice(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 bg-white bg-opacity-10 border border-white border-opacity-20 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
                   >
                     {currentVoices.map((v) => (
-                      <option key={v.value} value={v.value}>
+                      <option key={v.value} value={v.value} className="bg-slate-800">
                         {v.label}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                {/* Speed Control */}
+                {/* Speed */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Speed
-                    </label>
-                    <span className="text-sm font-semibold text-indigo-600">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-semibold text-white">Speed</label>
+                    <span className="text-sm font-bold text-purple-1000 bg-purple-500 bg-opacity-20 px-3 py-1 rounded-lg">
                       {speed.toFixed(1)}x
                     </span>
                   </div>
@@ -301,24 +270,21 @@ Try something like:
                     step="0.1"
                     value={speed}
                     onChange={(e) => setSpeed(Number(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                    className="w-full h-2 bg-white bg-opacity-20 rounded-lg cursor-pointer"
                   />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <div className="flex justify-between text-xs text-gray-400 mt-2">
                     <span>Slow</span>
                     <span>Normal</span>
                     <span>Fast</span>
                   </div>
                 </div>
 
-                {/* Pitch Control */}
+                {/* Pitch */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Pitch
-                    </label>
-                    <span className="text-sm font-semibold text-indigo-600">
-                      {pitch > 0 ? "+" : ""}
-                      {pitch}
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-semibold text-white">Pitch</label>
+                    <span className="text-sm font-bold text-pink-1000 bg-pink-500 bg-opacity-20 px-3 py-1 rounded-lg">
+                      {pitch > 0 ? "+" : ""}{pitch}
                     </span>
                   </div>
                   <input
@@ -328,22 +294,22 @@ Try something like:
                     step="1"
                     value={pitch}
                     onChange={(e) => setPitch(Number(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                    className="w-full h-2 bg-white bg-opacity-20 rounded-lg cursor-pointer"
                   />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <div className="flex justify-between text-xs text-gray-400 mt-2">
                     <span>Lower</span>
                     <span>Normal</span>
                     <span>Higher</span>
                   </div>
                 </div>
 
-                {/* Reset Button */}
+                {/* Reset */}
                 <button
                   onClick={() => {
                     setSpeed(1);
                     setPitch(0);
                   }}
-                  className="w-full py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="w-full py-3 bg-white bg-opacity-10 hover:bg-opacity-20 border border-white border-opacity-20 rounded-xl text-sm font-semibold transition-all"
                 >
                   Reset to Defaults
                 </button>

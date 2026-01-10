@@ -1,22 +1,38 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
 
-// 🔐 User database - Add your credentials here
-// To add a new user, add an object with id, email, and hashed password
-const users = [
-  {
-    id: "1",
-    email: "test@test.com",
-    password: bcrypt.hashSync("123456", 10),
-  },
-  // Add more users here:
-  // {
-  //   id: "2",
-  //   email: "your@email.com",
-  //   password: bcrypt.hashSync("yourpassword", 10),
-  // },
-];
+// 🔐 Load users from environment variables
+// Format: USER_1_EMAIL=test@test.com USER_1_PASSWORD=password123
+function getUsersFromEnv() {
+  const users = [];
+  let index = 1;
+
+  while (process.env[`USER_${index}_EMAIL`]) {
+    const email = process.env[`USER_${index}_EMAIL`];
+    const password = process.env[`USER_${index}_PASSWORD`];
+
+    if (email && password) {
+      users.push({
+        id: index.toString(),
+        email,
+        password, // Plain text from env
+      });
+    }
+    index++;
+  }
+
+  // Fallback to default if no users configured (for development)
+  if (users.length === 0) {
+    console.warn("⚠️ No users found in environment variables");
+    console.warn("⚠️ Add USER_1_EMAIL and USER_1_PASSWORD to your .env.local");
+    return [];
+  }
+
+  console.log("✅ Loaded users from environment:", users.map(u => u.email).join(", "));
+  return users;
+}
+
+const users = getUsersFromEnv();
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -27,25 +43,29 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // Validate input
         if (!credentials?.email || !credentials?.password) {
           console.log("❌ Missing credentials");
           return null;
         }
 
-        // Find user by email
-        const user = users.find((u) => u.email === credentials.email);
+        // Check if any users are configured
+        if (users.length === 0) {
+          console.log("❌ No users configured in environment variables");
+          return null;
+        }
+
+        // Find user (case-insensitive email)
+        const user = users.find(
+          (u) => u.email.toLowerCase() === credentials.email.toLowerCase()
+        );
 
         if (!user) {
           console.log("❌ User not found:", credentials.email);
           return null;
         }
 
-        // Verify password
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+        // Simple plain text password comparison
+        const isValid = credentials.password === user.password;
 
         if (!isValid) {
           console.log("❌ Invalid password for:", credentials.email);
@@ -54,7 +74,6 @@ export const authOptions: NextAuthOptions = {
 
         console.log("✅ Login successful:", user.email);
 
-        // Return user object (don't include password!)
         return {
           id: user.id,
           email: user.email,
@@ -64,7 +83,7 @@ export const authOptions: NextAuthOptions = {
   ],
   pages: {
     signIn: "/login",
-    error: "/login", // Redirect errors to login page
+    error: "/login",
   },
   session: {
     strategy: "jwt",
@@ -73,19 +92,17 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async jwt({ token, user }) {
-      // Add user ID to token on login
       if (user) {
         token.id = user.id;
       }
       return token;
     },
     async session({ session, token }) {
-      // Add user ID to session
       if (session.user) {
         session.user.id = token.id as string;
       }
       return session;
     },
   },
-  debug: process.env.NODE_ENV === "development", // Enable debug in dev mode
+  debug: process.env.NODE_ENV === "development",
 };
